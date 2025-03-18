@@ -1,0 +1,25 @@
+{
+  "name": "marvel-universe-explorer",
+  "version": "1.0.0",
+  "description": "Marvel Universe Explorer is an interactive app that provides detailed insights into the Marvel Cinematic Universe (MCU). It allows users to explore the connections between actors, characters, and movies, including finding which actors have played multiple characters, which characters have been portrayed by multiple actors, and discovering the vast array of Marvel movies featuring their favorite stars. Dive into the world of Marvel like never before with this easy-to-use, data-driven exploration tool!",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Uriel Niazov",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.9",
+    "p-queue": "^8.1.0",
+    "pg": "^8.13.3"
+  }
+}
