@@ -12,7 +12,6 @@
   "author": "Uriel Niazov",
   "license": "ISC",
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -20,6 +19,7 @@
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.9",
     "p-queue": "^8.1.0",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "sqlite3": "^5.1.7"
   }
 }
