@@ -10,25 +10,36 @@ class ScrapeService {
         console.log('started working in the service');
 
         await this.dbService.insertJob(correlationId, 'in_progress');
+        
+        setTimeout(() => {
+            this._startScrapingJobBackground(correlationId);
+        }, 0);
 
-        // setTimeout(() => {
-        //     this._startScrapingJobBackground(correlationId);
-        // }, 0);
+        await this.dbService.closeConnection();
 
         return correlationId;
     }
 
-    async _startScrapingJobBackground() {
+    async _startScrapingJobBackground(correlationId) {
         try {
-            const { movies, actors, characters } = await tmdbService.fetchAllMarvelData();
-
-            // Insert data into DB (e.g., movies, actors, characters)
-            // await this._storeDataInDB(movies, actors, characters);
+            console.log('Starting scraping job in the background...');
+            
+            // Fetch data from tmdbService
+            const { movies, actors, characters, actorMovies, characterActors } = await tmdbService.fetchAllMarvelData();
+    
+            // Insert all data into the database efficiently
+            const result = await this.dbService.insertAllData(movies, actors, characters, actorMovies, characterActors);
+    
+            // Update job status
+            await this.dbService.updateJobStatus(correlationId, 'success');
+            console.log('Data insertion completed:', result);
 
         } catch (error) {
-            console.error('Scraping failed:', error);
-
-
+            console.error('Error during scraping job:', error);
+            await this.dbService.updateJobStatus(correlationId, 'error', error.message);
+        }
+        finally {
+            await this.dbService.closeConnection();
         }
     }
 }

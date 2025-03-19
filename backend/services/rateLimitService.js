@@ -4,20 +4,23 @@ class RateLimitService {
   constructor() {
     this.queue = new PQueue({ intervalCap: 50, interval: 1000 }); // 50 requests per second
     this.API_URL = 'https://api.themoviedb.org/3';
-    this.ACCESS_TOKEN = process.env.TMDB_API_KEY;
     this.MAX_RETRIES = 5;  // Maximum retry attempts on 429
   }
 
+  getAccessToken() {
+    return process.env.TMDB_API_KEY;
+  }
   // Helper function to add delay (used for retry logic)
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async fetchWithRateLimit(endpoint, retries = 0) {
+    const ACCESS_TOKEN = this.getAccessToken(); 
     return this.queue.add(async () => {
       const response = await fetch(`${this.API_URL}${endpoint}`, {
         headers: {
-          Authorization: `Bearer ${this.ACCESS_TOKEN}`,
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
           'Content-Type': 'application/json',
         },
       });

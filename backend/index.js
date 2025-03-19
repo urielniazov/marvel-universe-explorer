@@ -2,9 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import marvelRoutes from './routes/marvelRoutes.js';
 import scrapeRoutes from './routes/scrapeRoutes.js';
+import dotenv from 'dotenv';  // Import dotenv to load environment variables
 
 const app = express();
 const port = 3000;
+dotenv.config({ path: './.env' });
 
 app.use(cors());
 app.use(express.json());

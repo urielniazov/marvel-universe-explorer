@@ -65,30 +65,69 @@ class TMDBService {
     }
 
     async fetchAllMarvelData() {
+        // Fetch all movies
         const movies = await this.fetchAllMarvelMovies();
-        const creditPromises = movies.map((movie) => this.fetchMovieCredits(movie.id));
-
-        const allCredits = await Promise.all(creditPromises);
-
-        let allActors = new Set();
-        let allCharacters = [];
-
-        allCredits.forEach((cast, index) => {
-            const movie = movies[index];
-            cast.forEach(({ name, character }) => {
-                allActors.add(name);
-                allCharacters.push({
+        console.log(`Fetched ${movies.length} Marvel movies`);
+        
+        // Fetch all credits in parallel
+        const creditPromises = movies.map((movie) => 
+            this.fetchMovieCredits(movie.id).then(credits => ({
+                movie,
+                credits
+            }))
+        );
+    
+        const allMovieCredits = await Promise.all(creditPromises);
+    
+        // Prepare data structures
+        const formattedMovies = movies.map(movie => ({ title: movie.title }));
+        
+        // Use Set to track unique actors
+        const actorsSet = new Set();
+        const actorMovies = [];
+        const characterActors = [];
+        
+        // Process credits
+        allMovieCredits.forEach(({ movie, credits }) => {
+            credits.forEach(({ name, character }) => {
+                // Add actor to unique set
+                actorsSet.add(name);
+                
+                // Add actor-movie relation
+                actorMovies.push({
                     actorName: name,
+                    movieTitle: movie.title
+                });
+                
+                // Add character-actor relation
+                characterActors.push({
                     characterName: character,
-                    movieName: movie.title,
+                    actorName: name,
+                    movieTitle: movie.title
                 });
             });
         });
-
+        
+        // Get unique characters
+        const charactersSet = new Set(characterActors.map(ca => ca.characterName));
+        
+        // Format final data
+        const formattedActors = Array.from(actorsSet).map(name => ({ full_name: name }));
+        const formattedCharacters = Array.from(charactersSet).map(name => ({ full_name: name }));
+        
+        console.log(`Processed data:
+        - ${formattedMovies.length} movies
+        - ${formattedActors.length} unique actors
+        - ${formattedCharacters.length} unique characters
+        - ${actorMovies.length} actor-movie relations
+        - ${characterActors.length} character-actor relations`);
+        
         return {
-            movies,
-            actors: Array.from(allActors),
-            characters: allCharacters,
+            movies: formattedMovies,
+            actors: formattedActors,
+            characters: formattedCharacters,
+            actorMovies,
+            characterActors
         };
     }
 }
