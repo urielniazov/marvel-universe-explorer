@@ -44,6 +44,7 @@ This project provides a backend service to interact with movie data, including f
    ```bash
    .exit
    ```
+   If somethign goes wrong just rename the already scraped `backup-marvel-universe.db` to `marvel-universe.db` and let me know!
 
 ### API Endpoints
 
