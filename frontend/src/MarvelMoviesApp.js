@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import rootStore from './stores/RootStore';
+import MoviesPerActorAutocomplete from './components/MoviesPerActorAutocomplete';
 
 const MarvelMoviesApp = observer(() => {
   const { movieStore } = rootStore;
@@ -8,7 +9,7 @@ const MarvelMoviesApp = observer(() => {
 
   useEffect(() => {
     // Fetch data based on active tab
-    switch (movieStore.activeTab) {
+    switch(movieStore.activeTab) {
       case 'moviesPerActor':
         movieStore.fetchMoviesPerActor();
         break;
@@ -25,29 +26,20 @@ const MarvelMoviesApp = observer(() => {
 
   // Render Movies Per Actor Tab
   const renderMoviesPerActor = () => {
-    const actors = Object.keys(movieStore.moviesPerActor);
+    const actors = movieStore.moviesPerActor;
 
     return (
       <div className="marvel-card animate-fade-in">
         <h2 className="text-2xl font-bold mb-4 text-marvel-primary">Movies Per Actor</h2>
-
+        
         <div className="mb-4">
-          <label htmlFor="actor-select" className="block mb-2 font-semibold">
+          <label htmlFor="actor-autocomplete" className="block mb-2 font-semibold">
             Select an Actor:
           </label>
-          <select
-            id="actor-select"
-            value={selectedActor}
-            onChange={(e) => setSelectedActor(e.target.value)}
-            className="marvel-select"
-          >
-            <option value="">Select an actor</option>
-            {actors.map((actor) => (
-              <option key={actor} value={actor}>
-                {actor}
-              </option>
-            ))}
-          </select>
+          <MoviesPerActorAutocomplete 
+            actors={actors}
+            onSelectActor={setSelectedActor}
+          />
         </div>
 
         {selectedActor && (
@@ -55,9 +47,12 @@ const MarvelMoviesApp = observer(() => {
             <h3 className="text-xl font-semibold mb-2 text-marvel-secondary">
               Movies for {selectedActor}:
             </h3>
-            <ul className="list-disc pl-5 space-y-2">
-              {movieStore.moviesPerActor[selectedActor].map((movie) => (
-                <li key={movie} className="text-gray-700 hover:text-marvel-primary transition-colors">
+            <ul className="list-disc pl-5 space-y-2 max-h-64 overflow-auto">
+              {actors[selectedActor].map((movie) => (
+                <li 
+                  key={movie} 
+                  className="text-gray-700 hover:text-marvel-primary transition-colors"
+                >
                   {movie}
                 </li>
               ))}
@@ -138,7 +133,7 @@ const MarvelMoviesApp = observer(() => {
       return <div className="error-state">{movieStore.error}</div>;
     }
 
-    switch (movieStore.activeTab) {
+    switch(movieStore.activeTab) {
       case 'moviesPerActor':
         return renderMoviesPerActor();
       case 'actorsMultipleCharacters':
@@ -155,35 +150,38 @@ const MarvelMoviesApp = observer(() => {
       <h1 className="text-4xl font-marvel font-bold text-center mb-8 text-marvel-primary">
         Marvel Movies Information
       </h1>
-
+      
       <div className="flex justify-center mb-6">
-        <div className="inline-flex rounded-md space-x-2" role="group">
-          <button
+        <div className="inline-flex space-x-2" role="group">
+          <button 
             type="button"
-            className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${movieStore.activeTab === 'moviesPerActor'
-                ? 'bg-marvel-primary text-white'
+            className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              movieStore.activeTab === 'moviesPerActor' 
+                ? 'bg-marvel-primary text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+            }`}
             onClick={() => movieStore.setActiveTab('moviesPerActor')}
           >
             Movies Per Actor
           </button>
-          <button
+          <button 
             type="button"
-            className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${movieStore.activeTab === 'actorsMultipleCharacters'
-                ? 'bg-marvel-primary text-white'
+            className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              movieStore.activeTab === 'actorsMultipleCharacters' 
+                ? 'bg-marvel-primary text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+            }`}
             onClick={() => movieStore.setActiveTab('actorsMultipleCharacters')}
           >
             Actors Multiple Characters
           </button>
-          <button
+          <button 
             type="button"
-            className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${movieStore.activeTab === 'charactersMultipleActors'
-                ? 'bg-marvel-primary text-white'
+            className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              movieStore.activeTab === 'charactersMultipleActors' 
+                ? 'bg-marvel-primary text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+            }`}
             onClick={() => movieStore.setActiveTab('charactersMultipleActors')}
           >
             Characters Multiple Actors

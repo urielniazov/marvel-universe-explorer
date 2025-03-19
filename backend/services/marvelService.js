@@ -68,22 +68,52 @@ class MarvelService {
     try {
       // Open DB connection
       await this.dbService.openConnection();
-
+  
       // Fetch data
       const rows = await this.dbService.fetchCharactersWithMultipleActors();
-
-      // Transform the data into an object with character names as keys and an array of movie-actor pairs as values
+  
+      // Validate rows
+      if (!rows || rows.length === 0) {
+        console.warn('No characters with multiple actors found');
+        return {};
+      }
+  
+      // Transform the data into an object with character names as keys 
+      // and an array of movie-actor pairs as values
       result = rows.reduce((acc, row) => {
-        if (!row.characterName.trim()) return acc;
+        // Skip empty or invalid rows
+        if (!row || !row.characterName || !row.characterName.trim()) return acc;
+  
+        // Initialize character entry if not exists
         if (!acc[row.characterName]) {
           acc[row.characterName] = [];
         }
-        acc[row.characterName].push({
-          movieName: row.movieName,
-          actorName: row.actorName
-        });
+  
+        // Add movie-actor pair, avoiding duplicates
+        const movieActorPair = {
+          movieName: row.movieName || '',
+          actorName: row.actorName || ''
+        };
+  
+        // Check if this exact movie-actor pair already exists
+        const isDuplicate = acc[row.characterName].some(
+          existing => 
+            existing.movieName === movieActorPair.movieName && 
+            existing.actorName === movieActorPair.actorName
+        );
+  
+        if (!isDuplicate) {
+          acc[row.characterName].push(movieActorPair);
+        }
+  
         return acc;
       }, {});
+  
+      // Optional: Filter out characters with only one actor (additional safety)
+      result = Object.fromEntries(
+        Object.entries(result).filter(([_, actors]) => actors.length > 1)
+      );
+  
     } catch (error) {
       console.error('Error fetching characters with multiple actors:', error);
       throw new Error('Error fetching characters with multiple actors');
@@ -91,6 +121,7 @@ class MarvelService {
       // Close DB connection
       await this.dbService.closeConnection();
     }
+  
     return result;
   }
 }

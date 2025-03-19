@@ -309,13 +309,26 @@ class DbService {
     }
     async fetchCharactersWithMultipleActors() {
         const query = `
-            SELECT characters.full_name AS characterName, movies.title AS movieName, actors.full_name AS actorName
-            FROM characters
-            JOIN character_actor ON characters.id = character_actor.character_id
+            WITH CharacterActorCounts AS (
+                SELECT 
+                    characters.id AS character_id,
+                    characters.full_name AS characterName,
+                    COUNT(DISTINCT actors.id) AS actor_count
+                FROM characters
+                JOIN character_actor ON characters.id = character_actor.character_id
+                JOIN actors ON character_actor.actor_id = actors.id
+                GROUP BY characters.id, characters.full_name
+                HAVING actor_count > 1
+            )
+            SELECT 
+                c.characterName,
+                movies.title AS movieName,
+                actors.full_name AS actorName
+            FROM CharacterActorCounts c
+            JOIN character_actor ON c.character_id = character_actor.character_id
             JOIN actors ON character_actor.actor_id = actors.id
             JOIN movies ON character_actor.movie_id = movies.id
-            GROUP BY characterName, movieName
-            HAVING COUNT(DISTINCT actors.id) > 1;
+            ORDER BY c.characterName, movieName, actorName;
         `;
         const rows = await this.dbPromise(query);
         return rows;

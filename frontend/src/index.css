@@ -13,3 +13,30 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f4f4f4;
 }
+
+/* Marvel Table Styles */
+.marvel-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.marvel-table thead {
+  background-color: #f4f4f4;
+}
+
+.marvel-table th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+  color: #333;
+}
+
+.marvel-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.marvel-table tr:hover {
+  background-color: #f9f9f9;
+}
