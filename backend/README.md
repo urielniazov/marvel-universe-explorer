@@ -32,10 +32,18 @@ This project provides a backend service to interact with movie data, including f
 4. Set up your environment file .env to store the TMDb API key:
    `TMDB_API_KEY=your_tmdb_api_key_here`
 5. Init sqlite db
-   `sqlite3 marvel-universe.db < schema.sql`
-   `sqlite3`
-   `.open marvel-universe.db`
-   `.exit`
+   ```bash
+   sqlite3 marvel-universe.db < schema.sql
+   ```
+   ```bash
+   sqlite3
+   ```
+   ```bash
+   .open marvel-universe.db
+   ```
+   ```bash
+   .exit
+   ```
 
 ### API Endpoints
 
