@@ -1,5 +1,5 @@
 import { tmdbService } from './tmdbService.js';
-import DbService from './dbService.js';  
+import DbService from './dbService.js';
 class ScrapeService {
     constructor() {
         this.dbService = new DbService();  // Initialize DbService
@@ -10,7 +10,7 @@ class ScrapeService {
         console.log('started working in the service');
 
         await this.dbService.insertJob(correlationId, 'in_progress');
-        
+
         setTimeout(() => {
             this._startScrapingJobBackground(correlationId);
         }, 0);
@@ -23,13 +23,14 @@ class ScrapeService {
     async _startScrapingJobBackground(correlationId) {
         try {
             console.log('Starting scraping job in the background...');
-            
+
+            const movies = await tmdbService.fetchAllMarvelMovies();
             // Fetch data from tmdbService
-            const { movies, actors, characters, actorMovies, characterActors } = await tmdbService.fetchAllMarvelData();
-    
+            const { actors, characters, actorMovies, characterActors } = await tmdbService.fetchAllMarvelData(movies);
+
             // Insert all data into the database efficiently
             const result = await this.dbService.insertAllData(movies, actors, characters, actorMovies, characterActors);
-    
+
             // Update job status
             await this.dbService.updateJobStatus(correlationId, 'success');
             console.log('Data insertion completed:', result);
