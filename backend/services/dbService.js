@@ -23,7 +23,9 @@ class DbService {
     }
 
     async updateJobStatus(id, status, errorMessage = null) {
-        const query = `UPDATE jobs SET status = ?, error_message = ? WHERE id = ?`;
+        const query = `UPDATE jobs 
+                       SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP 
+                       WHERE id = ?`;
         await this.runQuery(query, [status, errorMessage, id]);
     }
 

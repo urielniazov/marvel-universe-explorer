@@ -1,109 +1,132 @@
-# Vehicle Info API(Veezy)
+# Marvel Universe Explorer
 
-## Overview
-The Vehicle Info API allows users to fetch and store vehicle-related data from government sources. It retrieves details such as mileage, registration dates, manufacturer, model, fuel type, and more. The data is then stored securely in a PostgreSQL database using Supabase.
+This project provides a backend service to interact with movie data, including fetching movie information, actors, characters, and relationships between them, utilizing The Movie Database (TMDb) API. It also supports batch operations for inserting movie, actor, and character data into a SQLite database.
 
 ## Features
-- Fetches vehicle data from two external government APIs.
-- Stores vehicle information in a PostgreSQL database.
-- Uses Supabase for database management.
-- Implements authentication policies to restrict data modification.
-- Supports tracking of data updates via `created_at` and `updated_at` timestamps.
-- Designed for scalability with configurable field mappings.
 
-## Tech Stack
-- **Backend:** Node.js, Express
-- **Database:** PostgreSQL (via Supabase)
-- **Authentication:** Supabase Auth (planned)
-- **Hosting:** Render (planned)
-- **Package Manager:** npm
+- Fetch movies, actors, and character data from The Movie Database (TMDb) API.
+- Handle rate limiting with automatic retries using an exponential backoff strategy.
+- Batch insert movie, actor, and character data into SQLite.
+- Provide endpoints to retrieve and manipulate movie, actor, and character information.
+- Use of environment variables to securely manage API keys.
+
+## Requirements
+
+- **Node.js**: v14.x or later
+- **npm**: v6.x or later
+- **SQLite3**: For local database management
+- **TMDb API Key**: Required for fetching data from TMDb
 
 ## Installation
-### Prerequisites
-- Node.js (v22+ recommended)
-- npm or yarn
-- Supabase account
-- Git
 
-### Setup
 1. Clone the repository:
-   ```sh
-   git clone <your-repo-url>
-   cd <your-project-folder>
+
+   ```bash
+   git clone https://github.com/urielniazov/marvel-universe-explorer.git
    ```
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Create a `.env` file and configure environment variables:
-   ```sh
-   API_URL=https://data.gov.il/api/3/action/datastore_search
-   SUPABASE_URL=<your-supabase-url>
-   SUPABASE_KEY=<your-supabase-key>
-   ```
-4. Run the server:
-   ```sh
-   npm start
-   ```
+2. Navigate to the project folder:
+   `cd marvel-universe-explorer`
+   `cd backend`
+3. Install dependencies:
+   `npm install`
+4. Set up your environment file .env to store the TMDb API key:
+   `TMDB_API_KEY=your_tmdb_api_key_here`
+5. Init sqlite db
+   `sqlite3 marvel-universe.db < schema.sql`
+   `sqlite3`
+   `.open marvel-universe.db`
+   `.exit`
 
-## API Endpoints
-### Fetch and Store Vehicle Data
-#### `POST /api/vehicle/:vehicleNumber`
-Fetches vehicle data and details from government sources and stores them in the database.
+### API Endpoints
 
-**Response:**
-```json
-{
-    "vehicleNumber": 68722302,
-    "lastTestMileage": 22589,
-    "firstRegistrationDate": "2022-01-24 00:00:00",
-    "make": "סקודה צ'כיה",
-    "model": "3V3RXC",
-    "trim": "SPORTLINE",
-    "color": "שחור",
-    "fuelType": "חשמל/בנזין",
-    "manufactureYear": 2022,
-    "registrationDate": "2023-01-17"
-}
-```
+- `GET /api/moviesPerActor` - Returns a list of Marvel movies each actor has appeared in
+- `GET /api/actorsWithMultipleCharacters` - Returns actors who have played more than one Marvel character
+- `GET /api/charactersWithMultipleActors` - Returns Marvel characters portrayed by multiple actors
+- `POST /api/scrape` -  Trigger data synchronization with TMDB
 
-## Database Schema (Supabase)
-| Column                 | Type      | Description |
-|------------------------|----------|-------------|
-| `id`                  | UUID (PK)| Unique identifier |
-| `vehicle_number`      | INT      | Vehicle license number |
-| `last_test_mileage`   | INT      | Last recorded mileage |
-| `first_registration_date` | TIMESTAMP | First registration date |
-| `make`                | TEXT     | Manufacturer name |
-| `model`               | TEXT     | Vehicle model |
-| `trim`                | TEXT     | Trim level |
-| `color`               | TEXT     | Color of the vehicle |
-| `fuel_type`           | TEXT     | Type of fuel used |
-| `manufacture_year`    | INT      | Year of manufacture |
-| `registration_date`   | TIMESTAMP | Last registration date |
-| `created_at`          | TIMESTAMP | Record creation time |
-| `updated_at`          | TIMESTAMP | Last update time |
+## Database Schema
 
-## Security
-- **Row-Level Security (RLS)** is enabled in Supabase.
-- Policies restrict data modifications to authenticated users.
-- API keys should be kept secure and not exposed in the frontend.
+The project uses SQLite to store movie, actor, character, and job data. Below is an outline of the tables and their relationships.
 
-## Future Enhancements
-- Implement user authentication (Supabase Auth)
-- Optimize data fetching with caching
-- Add frontend UI for easy vehicle search
+### Tables
 
-## Contributing
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature-branch`).
-3. Commit your changes (`git commit -m "Add new feature"`).
-4. Push to your branch (`git push origin feature-branch`).
-5. Create a Pull Request.
+#### `movies`
+Stores information about movies.
 
-## License
-MIT License.
+| Column      | Type        | Description                           |
+|-------------|-------------|---------------------------------------|
+| `id`        | INTEGER     | Primary key (auto-increment)          |
+| `title`     | TEXT        | The title of the movie                |
 
----
-Let me know if you need any modifications!
+#### `actors`
+Stores information about actors.
 
+| Column      | Type        | Description                           |
+|-------------|-------------|---------------------------------------|
+| `id`        | INTEGER     | Primary key (auto-increment)          |
+| `full_name` | TEXT        | The full name of the actor            |
+
+#### `characters`
+Stores information about characters.
+
+| Column      | Type        | Description                           |
+|-------------|-------------|---------------------------------------|
+| `id`        | INTEGER     | Primary key (auto-increment)          |
+| `full_name` | TEXT        | The full name of the character        |
+
+#### `actor_movie`
+Stores the many-to-many relationship between actors and movies.
+
+| Column      | Type        | Description                           |
+|-------------|-------------|---------------------------------------|
+| `actor_id`  | INTEGER     | Foreign key to `actors.id`            |
+| `movie_id`  | INTEGER     | Foreign key to `movies.id`            |
+
+**Constraints**:
+- Primary key on `(actor_id, movie_id)`
+- Foreign key constraints on `actor_id` (references `actors(id)`), and `movie_id` (references `movies(id)`) with `ON DELETE CASCADE`
+
+#### `character_actor`
+Stores the many-to-many relationship between characters, actors, and movies.
+
+| Column          | Type        | Description                                 |
+|-----------------|-------------|---------------------------------------------|
+| `character_id`  | INTEGER     | Foreign key to `characters.id`              |
+| `actor_id`      | INTEGER     | Foreign key to `actors.id`                  |
+| `movie_id`      | INTEGER     | Foreign key to `movies.id`                  |
+
+**Constraints**:
+- Primary key on `(character_id, actor_id, movie_id)`
+- Foreign key constraints on `character_id` (references `characters(id)`), `actor_id` (references `actors(id)`), and `movie_id` (references `movies(id)`) with `ON DELETE CASCADE`
+
+#### `jobs`
+Stores information about scraping jobs.
+
+| Column         | Type        | Description                                   |
+|----------------|-------------|-----------------------------------------------|
+| `id`           | TEXT        | UUID correlation ID (Primary key)             |
+| `created_at`   | DATETIME    | Timestamp when the job was created            |
+| `updated_at`   | DATETIME    | Timestamp when the job was last updated       |
+| `status`       | TEXT        | Job status (in_progress, success, error)      |
+| `error_message`| TEXT        | Error message if any (nullable)               |
+
+### API Performance Optimization
+
+- **Indexes**: Strategic database indexes for faster queries
+- **Rate Limiting**: Batch processing and delays to respect TMDB API limits
+- **Error Handling**: Comprehensive error handling for API failures
+
+### Code Structure
+
+The application follows a clean, modular architecture:
+
+- **Services**: Business logic and data processing
+- **Controllers**: Request handling and response formatting
+- **Routes**: API endpoint definitions
+
+## Assumptions
+
+1. **Limited Dataset**: For the MVP, we're focusing on a subset of Marvel movies as specified in the requirements
+2. **Character Identification**: Characters are identified by name, which might cause issues if different characters share the same name
+3. **Actor Identification**: Actors are identified by their TMDB ID to avoid name conflicts
+4. **Data Fetching Strategy**: Most of the data will be fetched once. Afterward, the latest created_at timestamp from the jobs table will be used to fetch only new movies from TMDB that were created after that timestamp. This will avoid unnecessary repeated fetching of already processed data.
