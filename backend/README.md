@@ -130,3 +130,21 @@ The application follows a clean, modular architecture:
 2. **Character Identification**: Characters are identified by name, which might cause issues if different characters share the same name
 3. **Actor Identification**: Actors are identified by their TMDB ID to avoid name conflicts
 4. **Data Fetching Strategy**: Most of the data will be fetched once. Afterward, the latest created_at timestamp from the jobs table will be used to fetch only new movies from TMDB that were created after that timestamp. This will avoid unnecessary repeated fetching of already processed data.
+
+## Known Issues
+
+### Duplicate Data on Multiple Scraping Requests
+
+Currently, if multiple scraping requests are made (e.g., running the scraper again after a job completes), the system may duplicate data in the database. This happens because the TMDB API does not provide an "added date" or any other unique identifier to check whether the data has already been fetched. As a result, if the scraper is called multiple times, it fetches the same set of movies, actors, and characters, and the same data is inserted into the database again.
+
+#### Current Workaround
+The scraper does not yet track which movies, actors, and characters have already been added to the database, causing repeated fetches of the same data. This results in duplicate entries for the same movies, actors, characters, and their relationships.
+
+#### Planned Solution
+To avoid fetching duplicate data, the scraper will:
+1. Track the `created_at` timestamp of the last successful scraping job.
+2. On subsequent scrapes, only fetch movies that were released after the `created_at` timestamp of the last scrape.
+3. This will reduce unnecessary data fetching, especially for movies that have already been added to the database. However, it may still fetch movies released in the future (e.g., Spider-Man 4 in 2026) if the last scrape was performed today. This ensures that the database is always updated with new content while minimizing duplication.
+
+By using this approach, we ensure that only the most relevant data (new releases) is fetched on each run, improving efficiency without duplicating existing records.
+

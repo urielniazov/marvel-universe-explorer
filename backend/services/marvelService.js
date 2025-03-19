@@ -1,35 +1,98 @@
-export const fetchMoviesPerActor = async () => {
-  // Logic for fetching movies per actor (e.g., from a database or external API)
-  return {
-    "actorName": ["movieName1", "movieName2"],
-    "anotherActorName": ["movieName3", "movieName4"]
-  };
-};
+// src/services/marvelService.js
+import DbService from './dbService.js';  // Import the DbService to interact with DB
 
-export const fetchActorsWithMultipleCharacters = async () => {
-  // Logic for fetching actors with multiple characters (e.g., from a database or external API)
-  return {
-    "actorName": [
-      { "movieName": "movie1", "characterName": "characterA" },
-      { "movieName": "movie2", "characterName": "characterB" }
-    ],
-    "anotherActorName": [
-      { "movieName": "movie3", "characterName": "characterC" },
-      { "movieName": "movie4", "characterName": "characterD" }
-    ]
-  };
-};
+class MarvelService {
+  constructor(db) {
+    this.dbService = new DbService(db);  // Initialize DbService with database connection
+  }
 
-export const fetchCharactersWithMultipleActors = async () => {
-  // Logic for fetching characters with multiple actors (e.g., from a database or external API)
-  return {
-    "characterName": [
-      { "movieName": "movie1", "actorName": "actorA" },
-      { "movieName": "movie2", "actorName": "actorB" }
-    ],
-    "anotherCharacterName": [
-      { "movieName": "movie3", "actorName": "actorC" },
-      { "movieName": "movie4", "actorName": "actorD" }
-    ]
-  };
-};
+  // Fetch movies per actor
+  async fetchMoviesPerActor() {
+    let result = {};
+    try {
+      // Open DB connection
+      await this.dbService.openConnection();
+
+      // Fetch data
+      const rows = await this.dbService.fetchMoviesPerActor();
+
+      // Transform the data into an object with actor names as keys and movie names as values
+      result = rows.reduce((acc, row) => {
+        acc[row.actorName] = row.movieNames.split(',');
+        return acc;
+      }, {});
+    } catch (error) {
+      console.error('Error fetching movies per actor:', error);
+      throw new Error('Error fetching movies per actor');
+    } finally {
+      // Close DB connection
+      await this.dbService.closeConnection();
+    }
+    return result;
+  }
+
+  // Fetch actors with multiple characters
+  async fetchActorsWithMultipleCharacters() {
+    let result = {};
+    try {
+      // Open DB connection
+      await this.dbService.openConnection();
+
+      // Fetch data
+      const rows = await this.dbService.fetchActorsWithMultipleCharacters();
+
+      // Transform the data into an object with actor names as keys and an array of movie-character pairs as values
+      result = rows.reduce((acc, row) => {
+        if (!acc[row.actorName]) {
+          acc[row.actorName] = [];
+        }
+        acc[row.actorName].push({
+          movieName: row.movieName,
+          characterName: row.characterName
+        });
+        return acc;
+      }, {});
+    } catch (error) {
+      console.error('Error fetching actors with multiple characters:', error);
+      throw new Error('Error fetching actors with multiple characters');
+    } finally {
+      // Close DB connection
+      await this.dbService.closeConnection();
+    }
+    return result;
+  }
+
+  // Fetch characters with multiple actors
+  async fetchCharactersWithMultipleActors() {
+    let result = {};
+    try {
+      // Open DB connection
+      await this.dbService.openConnection();
+
+      // Fetch data
+      const rows = await this.dbService.fetchCharactersWithMultipleActors();
+
+      // Transform the data into an object with character names as keys and an array of movie-actor pairs as values
+      result = rows.reduce((acc, row) => {
+        if (!row.characterName.trim()) return acc;
+        if (!acc[row.characterName]) {
+          acc[row.characterName] = [];
+        }
+        acc[row.characterName].push({
+          movieName: row.movieName,
+          actorName: row.actorName
+        });
+        return acc;
+      }, {});
+    } catch (error) {
+      console.error('Error fetching characters with multiple actors:', error);
+      throw new Error('Error fetching characters with multiple actors');
+    } finally {
+      // Close DB connection
+      await this.dbService.closeConnection();
+    }
+    return result;
+  }
+}
+
+export default MarvelService;

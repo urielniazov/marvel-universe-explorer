@@ -17,6 +17,18 @@ class DbService {
         }
     }
 
+    async dbPromise(query, params = []) {
+        return new Promise((resolve, reject) => {
+            this.db.all(query, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
     async insertJob(id, status) {
         const query = `INSERT INTO jobs (id, status) VALUES (?, ?)`;
         await this.runQuery(query, [id, status]);
@@ -27,6 +39,12 @@ class DbService {
                        SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP 
                        WHERE id = ?`;
         await this.runQuery(query, [status, errorMessage, id]);
+    }
+
+    async getLatestJobSuccess() {
+        const query = 'SELECT created_at FROM jobs WHERE status = "success" ORDER BY created_at DESC LIMIT 1';
+        const result = await this.db.get(query);
+        return result; // Return the job's created_at
     }
 
     async openConnection() {
@@ -255,6 +273,52 @@ class DbService {
         } finally {
             await this.closeConnection();
         }
+    }
+
+    async fetchMoviesPerActor() {
+        const query = `
+            SELECT actors.full_name AS actorName, GROUP_CONCAT(movies.title) AS movieNames
+            FROM actors
+            JOIN actor_movie ON actors.id = actor_movie.actor_id
+            JOIN movies ON actor_movie.movie_id = movies.id
+            GROUP BY actorName;
+        `;
+        const rows = await this.dbPromise(query);
+        return rows;
+    }
+    async fetchActorsWithMultipleCharacters() {
+        const query = `
+            SELECT 
+                a.full_name AS actorName, 
+                m.title AS movieName, 
+                c.full_name AS characterName
+            FROM character_actor ca
+            JOIN actors a ON ca.actor_id = a.id
+            JOIN characters c ON ca.character_id = c.id
+            JOIN movies m ON ca.movie_id = m.id
+            WHERE ca.actor_id IN (
+                SELECT actor_id
+                FROM character_actor
+                GROUP BY actor_id
+                HAVING COUNT(DISTINCT character_id) > 1  -- Ensures the actor played multiple characters
+            )
+            ORDER BY a.full_name, m.title;
+        `;
+        const rows = await this.dbPromise(query);
+        return rows;
+    }
+    async fetchCharactersWithMultipleActors() {
+        const query = `
+            SELECT characters.full_name AS characterName, movies.title AS movieName, actors.full_name AS actorName
+            FROM characters
+            JOIN character_actor ON characters.id = character_actor.character_id
+            JOIN actors ON character_actor.actor_id = actors.id
+            JOIN movies ON character_actor.movie_id = movies.id
+            GROUP BY characterName, movieName
+            HAVING COUNT(DISTINCT actors.id) > 1;
+        `;
+        const rows = await this.dbPromise(query);
+        return rows;
     }
 }
 

@@ -1,5 +1,8 @@
 // src/controllers/marvelController.js
-import * as marvelService from '../services/marvelService.js';
+import MarvelService from '../services/marvelService.js';
+
+// Instantiate the MarvelService class
+const marvelService = new MarvelService();
 
 export const getMoviesPerActor = async (req, res) => {
   try {
