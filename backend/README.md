@@ -142,18 +142,18 @@ The application follows a clean, modular architecture:
 
 ## Known Issues
 
-### Duplicate Data on Multiple Scraping Requests
+Currently, the system does not expose an API endpoint to retrieve the status of scraping jobs. This makes it difficult to track the progress of a job, determine if it is still running, or check if a previous job has completed successfully.
 
-Currently, if multiple scraping requests are made (e.g., running the scraper again after a job completes), the system may duplicate data in the database. This happens because the TMDB API does not provide an "added date" or any other unique identifier to check whether the data has already been fetched. As a result, if the scraper is called multiple times, it fetches the same set of movies, actors, and characters, and the same data is inserted into the database again.
-
-#### Current Workaround
-The scraper does not yet track which movies, actors, and characters have already been added to the database, causing repeated fetches of the same data. This results in duplicate entries for the same movies, actors, characters, and their relationships.
+#### Impact
+- Users have no way of knowing if a job is still in progress or has failed.
+- Duplicate scraping jobs might be triggered unnecessarily because there's no visibility into the job status.
+- Debugging scraping failures becomes harder without an easy way to check job statuses.
 
 #### Planned Solution
-To avoid fetching duplicate data, the scraper will:
-1. Track the `created_at` timestamp of the last successful scraping job.
-2. On subsequent scrapes, only fetch movies that were released after the `created_at` timestamp of the last scrape.
-3. This will reduce unnecessary data fetching, especially for movies that have already been added to the database. However, it may still fetch movies released in the future (e.g., Spider-Man 4 in 2026) if the last scrape was performed today. This ensures that the database is always updated with new content while minimizing duplication.
+1. Create a new API endpoint (`GET /jobs`) to return the list of scraping jobs with their statuses (`in_progress, success, error`).
+2. Allow filtering by job status, so users can fetch only active, failed, or completed jobs.
+3. Include metadata in the response, such as `created_at`, `updated_at`, and `error_message` (if applicable).
+4. Add an optional `GET /jobs/:id` endpoint to fetch the details of a specific job by its ID.
 
-By using this approach, we ensure that only the most relevant data (new releases) is fetched on each run, improving efficiency without duplicating existing records.
+This improvement will provide better visibility into scraping operations and help prevent redundant or unnecessary job triggers. 🚀
 
