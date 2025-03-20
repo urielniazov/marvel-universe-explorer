@@ -18,6 +18,7 @@ class DbService {
     }
 
     async dbPromise(query, params = []) {
+        await this.openConnection();
         return new Promise((resolve, reject) => {
             this.db.all(query, params, (err, rows) => {
                 if (err) {
@@ -42,9 +43,9 @@ class DbService {
     }
 
     async getLatestJobSuccess() {
-        const query = 'SELECT created_at FROM jobs WHERE status = "success" ORDER BY created_at DESC LIMIT 1';
-        const result = await this.db.get(query);
-        return result; // Return the job's created_at
+        const query = 'select * from jobs where status="success" ORDER BY created_at DESC limit 1';
+        const result = await this.dbPromise(query);
+        return result;
     }
 
     async openConnection() {
