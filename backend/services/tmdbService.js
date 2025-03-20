@@ -7,7 +7,7 @@ class TMDBService {
         this.genreIds = Object.values(GENRES).join('|');
     }
 
-    buildQuery(params = {}, releaseDate) {
+    buildQuery(params = {}, releaseDate = null) {
         const defaultParams = {
             include_adult: false,
             include_video: false,
@@ -27,17 +27,17 @@ class TMDBService {
         return `/discover/movie?${queryString}`;
     }
 
-    async fetchMarvelMoviesFirstPage(lastJobFormattedDate) {
+    async fetchMarvelMoviesFirstPage(lastJobFormattedDate = null) {
         const query = this.buildQuery({ page: 1 }, lastJobFormattedDate);
         return await rateLimitService.fetchWithRateLimit(query);
     }
 
-    async fetchAllMarvelMovies(lastJobCreatedAt) {     
-         let lastJobFormattedDate = null;
-         if (lastJobCreatedAt) {
-             const date = new Date(lastJobCreatedAt);
-             lastJobFormattedDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-         }
+    async fetchAllMarvelMovies(lastJobCreatedAt = null) {
+        let lastJobFormattedDate = null;
+        if (lastJobCreatedAt) {
+            const date = new Date(lastJobCreatedAt);
+            lastJobFormattedDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        }
         const firstPageData = await this.fetchMarvelMoviesFirstPage(lastJobFormattedDate);
         const totalPages = firstPageData.total_pages;
 
@@ -77,6 +77,10 @@ class TMDBService {
     }
 
     async fetchAllMarvelData(movies) {
+        if (!movies || movies.length === 0) {
+            console.error('No movies to process');
+            return { movies: [], actors: [], characters: [], actorMovies: [], characterActors: [] };
+        }
         // Fetch all credits in parallel
         const creditPromises = movies.map((movie) =>
             this.fetchMovieCredits(movie.id).then(credits => ({

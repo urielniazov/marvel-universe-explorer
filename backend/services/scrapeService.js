@@ -24,9 +24,9 @@ class ScrapeService {
         try {
             console.log('Starting scraping job in the background...');
 
-            const movies = await tmdbService.fetchAllMarvelMovies();
+            const allMovies = await tmdbService.fetchAllMarvelMovies();
             // Fetch data from tmdbService
-            const { actors, characters, actorMovies, characterActors } = await tmdbService.fetchAllMarvelData(movies);
+            const { movies, actors, characters, actorMovies, characterActors } = await tmdbService.fetchAllMarvelData(allMovies);
 
             // Insert all data into the database efficiently
             const result = await this.dbService.insertAllData(movies, actors, characters, actorMovies, characterActors);
